@@ -1,0 +1,6 @@
+Flask
+Flask-Cors
+joblib
+pandas
+gdown
+gunicorn
