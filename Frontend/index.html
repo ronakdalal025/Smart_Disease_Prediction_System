@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Disease Prediction</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Disease Prediction Tool</h1>
+
+        <div class="autocomplete-wrapper">
+            <input type="text" id="symptomInput" placeholder="Start typing a symptom...">
+            <div id="autocomplete-list" class="autocomplete-items"></div>
+        </div>
+
+        <div id="selected-symptoms"></div>
+
+        <button onclick="sendSymptoms()">Predict</button>
+        <p id="result"></p>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
