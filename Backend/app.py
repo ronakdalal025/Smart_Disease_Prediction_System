@@ -16,6 +16,10 @@ prec = pd.read_csv('symptom_precaution.csv')
 app = Flask(__name__)
 CORS(app)
 
+@app.route('/', methods=['GET'])
+def home():
+    return "Backend is running ✅"
+
 
 # Download model from Google Drive if not present
 model_url = 'https://drive.google.com/uc?id=1c-6Quw0_aw-vecIEUmKr1B8UUvivI_FB'  # Replace with your ID
