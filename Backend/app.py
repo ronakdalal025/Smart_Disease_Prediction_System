@@ -53,18 +53,23 @@ model = joblib.load(model)
 @app.route('/predict', methods=['POST'])
 @cross_origin()
 def predict():
-    data = request.get_json()
-    user_symptom = data['symptoms']  # Expecting a list of features
+    try:
+        data = request.get_json()
+        user_symptom = data['symptoms']  # Expecting a list of features
 
-    padded_input = user_symptom + [0] * (17-(len(user_symptom)))
-    disease,description,precautions = predd(*padded_input)
+        padded_input = user_symptom + [0] * (17-(len(user_symptom)))
+        disease,description,precautions = predd(*padded_input)
 
-    clean_precautions = [p if isinstance(p, str) and p == p else "" for p in precautions]
-    clean_description = description if isinstance(description, str) and description == description else ""
+        clean_precautions = [p if isinstance(p, str) and p == p else "" for p in precautions]
+        clean_description = description if isinstance(description, str) and description == description else ""
 
-    return jsonify({'prediction': disease,
+        return jsonify({'prediction': disease,
                     'description': clean_description,
                     'precautions': clean_precautions})
+
+    except Exception as e:
+        print("❌ Error occurred:", e)
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
