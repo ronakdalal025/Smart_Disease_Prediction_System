@@ -16,6 +16,17 @@ prec = pd.read_csv('symptom_precaution.csv')
 app = Flask(__name__)
 CORS(app)
 
+
+# Download model from Google Drive if not present
+model_url = 'https://drive.google.com/uc?id=1c-6Quw0_aw-vecIEUmKr1B8UUvivI_FB'  # Replace with your ID
+model = 'rnd_forest.joblib'
+
+if not os.path.exists(model):
+    gdown.download(model_url, model, quiet=False)
+
+# Load your model
+model = joblib.load(model)
+
 def predd(S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12,S13,S14,S15,S16,S17):
     psymptoms = [S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12,S13,S14,S15,S16,S17]
     #print(psymptoms)
@@ -26,7 +37,7 @@ def predd(S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12,S13,S14,S15,S16,S17):
             if isinstance(psymptoms[j], str) and psymptoms[j].lower() == a[k].lower():
                 psymptoms[j]=b[k]
     psy = [psymptoms]
-    pred2 = rnd_forest.predict(psy)
+    pred2 = model.predict(psy)
     disp= discrp[discrp['Disease']==pred2[0]]
     disease = pred2[0]
     description = disp.values[0][1]
@@ -38,16 +49,6 @@ def predd(S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12,S13,S14,S15,S16,S17):
    
     
     return disease, description, precautions
-
-# Download model from Google Drive if not present
-model_url = 'https://drive.google.com/uc?id=1c-6Quw0_aw-vecIEUmKr1B8UUvivI_FB'  # Replace with your ID
-model = 'rnd_forest.joblib'
-
-if not os.path.exists(model):
-    gdown.download(model_url, model, quiet=False)
-
-# Load your model
-model = joblib.load(model)
 
 
 @app.route('/predict', methods=['POST'])
@@ -68,7 +69,8 @@ def predict():
                     'precautions': clean_precautions})
 
     except Exception as e:
-        print("❌ Error occurred:", e)
+        import traceback
+        print("Error during prediction:", traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
