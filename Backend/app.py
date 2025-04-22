@@ -31,46 +31,57 @@ if not os.path.exists(model):
 # Load your model
 model = joblib.load(model)
 
-def predd(S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12,S13,S14,S15,S16,S17):
-    psymptoms = [S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12,S13,S14,S15,S16,S17]
-    #print(psymptoms)
-    a = np.array(df1["Symptom"])
-    b = np.array(df1["weight"])
-    for j in range(len(psymptoms)):
-        for k in range(len(a)):
-            if isinstance(psymptoms[j], str) and psymptoms[j].lower() == a[k].lower():
-                psymptoms[j]=b[k]
-    psy = [psymptoms]
-    pred2 = model.predict(psy)
-    disp= discrp[discrp['Disease']==pred2[0]]
-    disease = pred2[0]
-    description = disp.values[0][1]
-    recomnd = prec[prec['Disease']==pred2[0]]
-    c=np.where(prec['Disease']==pred2[0])[0][0]
-    precautions=[]
-    for i in range(1,len(prec.iloc[c])):
-          precautions.append(prec.iloc[c,i])
-   
+def predd(x, *symptoms):
+    input_symptoms = list(symptoms)
+    symptom_map = dict(zip(df1["Symptom"], df1["weight"]))
+    weighted_input = [symptom_map.get(sym, 0) for sym in input_symptoms]
     
-    return disease, description, precautions
+    num_nonzero = sum(1 for w in weighted_input if w > 0)
+    dampening_factor = min(1.0, num_nonzero / 17.0)
+    raw_probs = x.predict_proba([weighted_input])[0]
+    adjusted_probs = raw_probs * dampening_factor
+    if adjusted_probs.sum() > 0:
+        adjusted_probs /= adjusted_probs.sum()
+
+    top_n = 3
+    top_indices = np.argsort(adjusted_probs)[::-1][:top_n]
+    diseases = x.classes_
+
+    results = []
+    for i in top_indices:
+        disease = diseases[i]
+        confidence = round(adjusted_probs[i] * 100, 2)
+
+        desc_row = discrp[discrp['Disease'] == disease]
+        desc = desc_row['Description'].values[0] if not desc_row.empty else "No description available."
+
+        prec_row = prec[prec['Disease'] == disease]
+        precautions = list(prec_row.values[0][1:]) if not prec_row.empty else []
+
+        results.append({
+            "disease": disease,
+            "confidence": confidence,
+            "description": desc,
+            "precautions": [p for p in precautions if str(p).strip().lower() != 'nan']
+        })
+
+    return results
+
 
 
 @app.route('/predict', methods=['POST'])
 @cross_origin()
 def predict():
     try:
-        data = request.get_json()
-        user_symptom = data['symptoms']  # Expecting a list of features
+        data = request.json
+        symptoms = data.get('symptoms', [])
 
-        padded_input = user_symptom + [0] * (17-(len(user_symptom)))
-        disease,description,precautions = predd(*padded_input)
+        # Ensure exactly 17 symptoms (pad with "0" or any default)
+        symptoms += ["0"] * (17 - len(symptoms))
+        symptoms = symptoms[:17]
 
-        clean_precautions = [p if isinstance(p, str) and p == p else "" for p in precautions]
-        clean_description = description if isinstance(description, str) and description == description else ""
-
-        return jsonify({'prediction': disease,
-                    'description': clean_description,
-                    'precautions': clean_precautions})
+        results = predd(model, *symptoms)
+        return jsonify(results)
 
     except Exception as e:
         import traceback
