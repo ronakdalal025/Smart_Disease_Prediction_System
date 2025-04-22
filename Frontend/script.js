@@ -85,21 +85,36 @@ input.addEventListener('input',function(){
 //Send to backend
 function sendSymptoms(){
 
-    fetch('https://smart-disease-prediction-system.onrender.com/predict', {
-        method:'POST', headers:{'Content-Type': 'application/json'},
-        body:JSON.stringify({
-            symptoms: selectedSymptoms
-        })
+   fetch('https://your-backend.onrender.com/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symptoms: selectedSymptoms })
     })
     .then(response => response.json())
     .then(data => {
-        document.getElementById('result').innerHTML = `<h3>Disease: ${data.prediction}</h3>
-        <p><strong>Description:</strong> ${data.description}</p>
-        <p><strong>Precautions:</strong></p>
-        <ul>
-            ${data.precautions.map(item => `<li>${item}</li>`).join("")}
-        </ul>
-        `;
+        const resultContainer = document.getElementById('result');
+        resultContainer.innerHTML = '';
+
+        data.forEach(prediction => {
+            const { disease, confidence, description, precautions } = prediction;
+
+            const diseaseCard = document.createElement('div');
+            diseaseCard.className = 'disease-card';
+
+            diseaseCard.innerHTML = `
+                <h3>🦠 Predicted Disease: ${disease} (${confidence}%)</h3>
+                <p><strong>🧾 Description:</strong> ${description}</p>
+                <p><strong>✅ Home Precautions:</strong></p>
+                <ul>
+                    ${precautions
+                        .filter(p => p && p.toLowerCase() !== 'nan') // clean up
+                        .map(p => `<li>- ${p}</li>`).join('')}
+                </ul>
+                <hr/>
+            `;
+
+            resultContainer.appendChild(diseaseCard);
+        });
     })
     .catch(err => {
         console.error(err);
