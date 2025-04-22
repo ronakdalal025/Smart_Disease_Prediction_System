@@ -85,7 +85,7 @@ input.addEventListener('input',function(){
 //Send to backend
 function sendSymptoms(){
 
-   fetch('https://smart-disease-prediction-system.onrender.com', {
+   fetch('https://smart-disease-prediction-system.onrender.com/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symptoms: selectedSymptoms })
