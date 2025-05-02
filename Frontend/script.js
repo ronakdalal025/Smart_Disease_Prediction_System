@@ -102,7 +102,7 @@ function sendSymptoms(){
             diseaseCard.className = 'disease-card';
 
             diseaseCard.innerHTML = `
-                <h3>🦠 Predicted Disease: ${disease} (${confidence}%)</h3>
+                <h3> Predicted Disease: ${disease} (${confidence}%)</h3>
                 <p><strong>🧾 Description:</strong> ${description}</p>
                 <p><strong>✅ Home Precautions:</strong></p>
                 <ul>
